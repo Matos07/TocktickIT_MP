@@ -6,9 +6,7 @@
 | # | Prompt (summarised) | What I did with the result |
 |---|---------------------|----------------------------|
 | Plan Lab 1 Implementation | I want you to read every file in the architecture. Please fill a full report of what you see. I also want you to include in this report what tools I will have to install to start successfully the project in my browser. | I had to understand the project at first – I wanted an actual overview of the structure of the project |
-| Set Up Full-Stack Project | Here is our first task : Technical setup
-Required branch: feature/1-project-foundation
-Acceptance criteria:
+| Set Up Full-Stack Project | Here is our first task : Technical setup Required branch: feature/1-project-foundation Acceptance criteria:
 •	React + TypeScript + Vite frontend starts successfully.
 •	Bootstrap is installed and visible in the frontend. -7-
 •	Node.js + Express + TypeScript backend starts successfully.
@@ -17,8 +15,7 @@ Acceptance criteria:
 •	.gitignore and .env.example exist; secrets and node_modules are not committed.
 •	Initial README setup instructions are present.
 I want you to specify theses requirements and ask me if you got it right. Then proceed the modifications.
-Once you are done, please fill a full report to explain what you did and why does it fulfil only these requirements.
- | It worked well at first attempt, but I didn’t REALLY understand what the agent did in first place. I had to ask for further explanations. |
+Once you are done, please fill a full report to explain what you did and why does it fulfil only these requirements. | It worked well at first attempt, but I didn’t REALLY understand what the agent did in first place. I had to ask for further explanations. |
 | Implement Health Check | Now, we are ready to go on issue two. Required branch: feature/2-health-check 
 We are gonna go step by step on this one. 
 Here is your task : GET /api/health returns HTTP 200. 
