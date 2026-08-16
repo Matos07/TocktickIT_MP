@@ -1,4 +1,4 @@
-# Lab 1 — AI Use and Reflection  (fill this in)
+# Lab 1 — AI Use and Reflection
 
 **LLM/agent used:** <name>
 
@@ -15,3 +15,7 @@
 ## Reflection
 Two or three sentences: what made your prompts better, and one place you had to
 correct or reject what the agent produced.
+
+I had to think about several things : why do I use this prompt and not another ? Can this task be broken into smallertasks that I can efficiently do instead of relying on AI ?
+I didn't had issues through my work beside my own forgots. I had to tell the agent when it was getting outside what I really needed.
+
