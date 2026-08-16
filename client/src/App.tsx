@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { checkSystem, Category } from "./api.js";
+import { checkSystem, Category } from "./api.ts";
 
 // UI states you must handle for Issue 4: idle, loading, success, error.
 type UiState = "idle" | "loading" | "success" | "error";
@@ -8,7 +8,7 @@ export default function App() {
   const [state, setState] = useState<UiState>("idle");
   const [categories, setCategories] = useState<Category[]>([]);
   const [errorMessage, setErrorMessage] = useState<string>("");
-  void categories;
+  //void categories;
 
   async function handleCheck() {
     setState("loading");
@@ -32,9 +32,9 @@ export default function App() {
         {state === "loading" ? "Loading…" : "Check System"}
       </button>
 
-      {state === "success" && (
+      {/* {state === "success" && (
         <p className="mt-3 text-success fw-bold">Backend is Online</p>
-      )}
+      )} */}
 
       {state === "error" && (
         <div className="mt-3 alert alert-danger">
@@ -44,6 +44,19 @@ export default function App() {
       )}
 
       {/* TODO(Issue 4): render the categories list inside the success state. */}
+
+      {state === "success" && (
+        <>
+          <p className="mt-3 text-success fw-bold">Backend is Online</p>
+          <ul className="list-group mt-3">
+            {categories.map((cat) => (
+              <li key={cat.id} className="list-group-item">
+                {cat.name}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }
