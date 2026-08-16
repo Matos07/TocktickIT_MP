@@ -12,17 +12,7 @@ We are gonna go step by step on this one.
 Here is your task : GET /api/health returns HTTP 200. 
 At first, I want you to explain your plan and ask me for permission to apply it.
  | I attempted to shorten the tasks to understand better what the agent does step-by-step. However, the tasks were too short for the agent to have an overall view and got a little messy. I had to give it the full issue then Solve it bit by bit. |
-| Implement Category Feature | let’s move on onto the next step. We have now to specify issue 3 requirements. Here they are : 
-
-Acceptance criteria:
-
-A Prisma Category model exists with id, unique name, and createdAt.
-A migration creates the Category table.
-The seed inserts Account and Access, Hardware, Software, and Network.
-The seed is safe to run more than once without duplicates.
-Database credentials are not committed.
-
-Please specify these requirements and fill a report about what to do, in what order and how to do it to reach these goals.
+| Implement Category Feature | let’s move on onto the next step. We have now to specify issue 3 requirements. Here they are : Acceptance criteria: A Prisma Category model exists with id, unique name, and createdAt. A migration creates the Category table. The seed inserts Account and Access, Hardware, Software, and Network. The seed is safe to run more than once without duplicates. Database credentials are not committed. Please specify these requirements and fill a report about what to do, in what order and how to do it to reach these goals.
  | I told the agent to describe what to do so I can do it myself and truly understand what I am doing with my code.  |
 | Diagnose stuck Loading state |  | It didn’t work first time because I was not tedious with my prompts, I had to be more patient and furnish more elements. |
 | Review Final Lab 1 Work | Perfect, everything works as desired. I took screenshots throughout my progress. Here is the full PDF of the lab. I need to make a report, could you make me a template? | I got straight to the point and had the template I needed. |
