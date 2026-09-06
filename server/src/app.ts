@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { getPrisma } from "./prisma.js";
 import { requestersRouter } from "./routes/requesters.js";
+import { ticketsRouter } from "./routes/tickets.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -12,7 +13,7 @@ app.use(express.json());
 
 // ── Routes ─────────────────────────────────────────────────────────────────
 app.use("/api/requesters", requestersRouter);
-
+app.use("/api/tickets", ticketsRouter);
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
 // Make the test in tests/lab-01/health.test.ts pass.
