@@ -7,7 +7,7 @@ interface RequesterContextValue {
     clearRequester: () => void;
 }
 
-const RequesterContext = createContext<RequesterContextValue | undefined>(undefined);
+export const RequesterContext = createContext<RequesterContextValue | undefined>(undefined);
 
 export function RequesterProvider({ children }: { children: ReactNode }) {
     const [requester, setRequesterState] = useState<Requester | null>(null);
