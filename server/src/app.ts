@@ -1,9 +1,7 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
 import { getPrisma } from "./prisma.js";
-// getPrisma() is your lazy database handle. Call it INSIDE a route when you
-// need the DB (Issue 4). It is intentionally unused until then.
-void getPrisma;
+import { requestersRouter } from "./routes/requesters.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -11,6 +9,9 @@ export const app = express();
 
 app.use(cors());          // already wired: lets the Vite dev server call this API
 app.use(express.json());
+
+// ── Routes ─────────────────────────────────────────────────────────────────
+app.use("/api/requesters", requestersRouter);
 
 // ---------------------------------------------------------------------------
 // Issue 2 — API health check
