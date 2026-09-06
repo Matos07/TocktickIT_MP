@@ -4,6 +4,7 @@ import { getPrisma } from "./prisma.js";
 import { requestersRouter } from "./routes/requesters.js";
 import { ticketsRouter } from "./routes/tickets.js";
 import { relatedSystemsRouter } from "./routes/related-systems.js";
+import { attachmentsRouter } from "./routes/attachments.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -11,7 +12,7 @@ export const app = express();
 
 app.use(cors());          // already wired: lets the Vite dev server call this API
 app.use(express.json());
-
+app.use("/api/attachments", attachmentsRouter);
 // ── Routes ─────────────────────────────────────────────────────────────────
 app.use("/api/requesters", requestersRouter);
 app.use("/api/tickets", ticketsRouter);

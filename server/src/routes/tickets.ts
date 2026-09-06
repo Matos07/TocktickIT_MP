@@ -1,6 +1,7 @@
 import { Router, Request, Response } from "express";
 import { getPrisma } from "../prisma.js";
 import { validateCreateTicketInput } from "../validation/ticket.js";
+import { ticketAttachmentsRouter } from "./attachments.js";
 
 export const ticketsRouter = Router();
 
@@ -102,6 +103,53 @@ ticketsRouter.post("/", async (req: Request, res: Response) => {
         console.error("[POST /api/tickets]", err);
         res.status(500).json({
             error: { code: "SERVER_ERROR", message: "Failed to create ticket. Please try again." },
+        });
+    }
+});
+
+
+
+ticketsRouter.use("/:id/attachments", ticketAttachmentsRouter);
+
+// GET /api/tickets/:id — owned ticket detail + attachments (api-spec §6).
+ticketsRouter.get("/:id", async (req: Request, res: Response) => {
+    const prisma = getPrisma();
+    const ticketId = Number(req.params.id);
+
+    try {
+        const requesterId = Number(req.header("x-requester-id"));
+        if (!Number.isInteger(requesterId) || requesterId <= 0) {
+            res.status(404).json({ error: { code: "NOT_FOUND", message: "Ticket not found." } });
+            return;
+        }
+
+        const ticket = await prisma.ticket.findFirst({
+            where: { id: ticketId, requesterId },
+            include: {
+                attachments: {
+                    select: {
+                        id: true,
+                        originalFileName: true,
+                        mimeType: true,
+                        sizeBytes: true,
+                        uploadedAt: true,
+                        removedAt: true,
+                        removedReason: true,
+                    },
+                },
+            },
+        });
+
+        if (!ticket) {
+            res.status(404).json({ error: { code: "NOT_FOUND", message: "Ticket not found." } });
+            return;
+        }
+
+        res.status(200).json(ticket);
+    } catch (err) {
+        console.error("[GET /api/tickets/:id]", err);
+        res.status(500).json({
+            error: { code: "SERVER_ERROR", message: "Failed to retrieve ticket. Please try again." },
         });
     }
 });
