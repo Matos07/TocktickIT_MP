@@ -52,6 +52,7 @@ import RequesterSelection from "./pages/RequesterSelection.js";
 import CreateTicket from "./pages/CreateTicket.js";
 import { RequireRequester } from "./routes/RequireRequester.js";
 import { useRequester } from "./context/RequesterContext.js";
+import MyTickets from "./pages/MyTickets.js";
 
 function AppShell() {
   const { requester, clearRequester } = useRequester();
@@ -84,7 +85,7 @@ function AppShell() {
 
       <div className="container py-5">
         <Routes>
-          <Route path="/" element={<p>Placeholder — My Tickets lands in Issue 7.</p>} />
+          <Route path="/" element={<MyTickets />} />
           <Route path="/create-ticket" element={<CreateTicket />} />
         </Routes>
       </div>

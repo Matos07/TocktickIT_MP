@@ -58,3 +58,47 @@ export async function createTicket(
 
     return res.json();
 }
+
+export interface TicketListItem {
+    id: number;
+    ticketNumber: string;
+    summary: string;
+    categoryId: number;
+    requestedPriority: RequestedPriority;
+    itPriority: RequestedPriority | null;
+    currentStatus: "NEW";
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface TicketListResponse {
+    data: TicketListItem[];
+    pagination: { page: number; pageSize: number; totalItems: number; totalPages: number };
+}
+
+export interface FetchTicketsParams {
+    search?: string;
+    categoryId?: number;
+    requestedPriority?: RequestedPriority;
+    status?: "NEW";
+    sortBy?: "createdAt" | "updatedAt" | "ticketNumber";
+    sortOrder?: "asc" | "desc";
+    page?: number;
+    pageSize?: number;
+}
+
+export async function fetchTickets(
+    requesterId: number,
+    params: FetchTicketsParams = {}
+): Promise<TicketListResponse> {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== "") query.set(key, String(value));
+    });
+
+    const res = await fetch(`${API_BASE}/api/tickets?${query.toString()}`, {
+        headers: { "x-requester-id": String(requesterId) },
+    });
+    if (!res.ok) throw new Error(`Failed to load tickets (HTTP ${res.status})`);
+    return res.json();
+}
