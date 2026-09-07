@@ -3,10 +3,12 @@ import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, Category } from "../api/categories.js";
 import { fetchRelatedSystems, RelatedSystem } from "../api/related-systems.js";
 import { createTicket, CreateTicketError, Ticket, RequestedPriority } from "../api/tickets.js";
+import { uploadAttachment } from "../api/attachments.js";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
+
 
 type ReferenceDataState = "loading" | "success" | "error";
 type SubmitState = "idle" | "submitting" | "success" | "error";
@@ -35,6 +37,7 @@ export default function CreateTicket() {
     const [submitState, setSubmitState] = useState<SubmitState>("idle");
     const [submitError, setSubmitError] = useState("");
     const [createdTicket, setCreatedTicket] = useState<Ticket | null>(null);
+    const [uploadFailures, setUploadFailures] = useState<string[]>([]);
 
     useEffect(() => {
         let cancelled = false;
@@ -129,6 +132,20 @@ export default function CreateTicket() {
                 description: description.trim(),
                 requestedPriority: requestedPriority as RequestedPriority,
             });
+
+            // BR-16: attachment upload is decoupled — the ticket is already saved
+            // at this point regardless of what happens below.
+            const failedUploads: string[] = [];
+            for (const pf of pendingFiles) {
+                if (pf.error) continue; // already-rejected files were never meant to upload
+                try {
+                    await uploadAttachment(requester.id, ticket.id, pf.file);
+                } catch {
+                    failedUploads.push(pf.file.name);
+                }
+            }
+
+            setUploadFailures(failedUploads);
             setCreatedTicket(ticket);
             setSubmitState("success");
         } catch (err) {
@@ -151,6 +168,7 @@ export default function CreateTicket() {
         setSubmitError("");
         setCreatedTicket(null);
         setSubmitState("idle");
+        setUploadFailures([])
     }
 
     if (refState === "loading") {
@@ -179,6 +197,12 @@ export default function CreateTicket() {
                     <h2 className="h5 mb-2" style={{ color: "#0B7A46" }}>
                         Ticket created successfully
                     </h2>
+                    {uploadFailures.length > 0 && (
+                        <div className="alert alert-warning mt-2 mb-0">
+                            <strong>Some attachments could not be uploaded:</strong> {uploadFailures.join(", ")}.
+                            You can retry from the ticket's detail page.
+                        </div>
+                    )}
                     <p className="mb-1">
                         Ticket Number: <strong>{createdTicket.ticketNumber}</strong>
                     </p>

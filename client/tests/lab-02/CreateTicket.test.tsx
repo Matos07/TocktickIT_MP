@@ -6,6 +6,7 @@ import { RequesterContext } from "../../src/context/RequesterContext.js";
 import * as categoriesApi from "../../src/api/categories.js";
 import * as relatedSystemsApi from "../../src/api/related-systems.js";
 import * as ticketsApi from "../../src/api/tickets.js";
+import * as attachmentsApi from "../../src/api/attachments.js";
 
 const mockRequester = { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com" };
 
@@ -196,5 +197,39 @@ describe("CreateTicket — busy submission state", () => {
         });
 
         await waitFor(() => expect(screen.getByText(/TKT-2026-000001/)).toBeInTheDocument());
+    });
+});
+
+it("AC-02: uploads selected attachments after ticket creation succeeds", async () => {
+    vi.spyOn(categoriesApi, "fetchCategories").mockResolvedValue([{ id: 1, name: "Hardware" }]);
+    vi.spyOn(relatedSystemsApi, "fetchRelatedSystems").mockResolvedValue([{ id: 1, name: "Corporate Laptop" }]);
+    vi.spyOn(ticketsApi, "createTicket").mockResolvedValue({
+        id: 42, ticketNumber: "TKT-2026-000042", requesterId: 1, categoryId: 1, relatedSystemId: 1,
+        summary: "Laptop battery drains quickly", description: "Battery drains much faster than usual.",
+        requestedPriority: "MEDIUM", itPriority: null, currentStatus: "NEW",
+        createdAt: "2026-09-05T10:00:00.000Z", updatedAt: "2026-09-05T10:00:00.000Z",
+    });
+    const uploadSpy = vi.spyOn(attachmentsApi, "uploadAttachment").mockResolvedValue({
+        id: 1, originalFileName: "photo.png", mimeType: "image/png", sizeBytes: 1024,
+        uploadedAt: "2026-09-05T10:00:00.000Z", removedAt: null, removedReason: null,
+    });
+
+    renderWithContext();
+    await waitFor(() => expect(screen.getByLabelText(/category/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText(/category/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/related system/i), { target: { value: "1" } });
+    fireEvent.change(screen.getByLabelText(/summary/i), { target: { value: "Laptop battery drains quickly" } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: "Battery drains much faster than usual." } });
+    fireEvent.change(screen.getByLabelText(/requested priority/i), { target: { value: "MEDIUM" } });
+
+    const file = new File(["fake"], "photo.png", { type: "image/png" });
+    fireEvent.change(screen.getByLabelText(/attachments/i), { target: { files: [file] } });
+    await screen.findByText("photo.png");
+
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => {
+        expect(uploadSpy).toHaveBeenCalledWith(1, 42, file);
     });
 });
