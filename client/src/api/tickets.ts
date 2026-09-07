@@ -102,3 +102,33 @@ export async function fetchTickets(
     if (!res.ok) throw new Error(`Failed to load tickets (HTTP ${res.status})`);
     return res.json();
 }
+
+export interface AttachmentMeta {
+    id: number;
+    originalFileName: string;
+    mimeType: string;
+    sizeBytes: number;
+    uploadedAt: string;
+    removedAt: string | null;
+    removedReason: string | null;
+}
+
+export interface TicketDetail extends Ticket {
+    attachments: AttachmentMeta[];
+}
+
+export class TicketNotFoundError extends Error {
+    constructor() {
+        super("Ticket not found.");
+        this.name = "TicketNotFoundError";
+    }
+}
+
+export async function fetchTicket(requesterId: number, ticketId: number): Promise<TicketDetail> {
+    const res = await fetch(`${API_BASE}/api/tickets/${ticketId}`, {
+        headers: { "x-requester-id": String(requesterId) },
+    });
+    if (res.status === 404) throw new TicketNotFoundError();
+    if (!res.ok) throw new Error(`Failed to load ticket (HTTP ${res.status})`);
+    return res.json();
+}

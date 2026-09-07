@@ -53,6 +53,7 @@ import CreateTicket from "./pages/CreateTicket.js";
 import { RequireRequester } from "./routes/RequireRequester.js";
 import { useRequester } from "./context/RequesterContext.js";
 import MyTickets from "./pages/MyTickets.js";
+import TicketDetail from "./pages/TicketDetail.js";
 
 function AppShell() {
   const { requester, clearRequester } = useRequester();
@@ -87,6 +88,7 @@ function AppShell() {
         <Routes>
           <Route path="/" element={<MyTickets />} />
           <Route path="/create-ticket" element={<CreateTicket />} />
+          <Route path="/tickets/:id" element={<TicketDetail />} />
         </Routes>
       </div>
     </div>
