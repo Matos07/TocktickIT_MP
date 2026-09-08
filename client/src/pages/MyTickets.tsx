@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useRequester } from "../context/RequesterContext.js";
 import { fetchTickets, TicketListItem } from "../api/tickets.js";
 import { fetchCategories, Category } from "../api/categories.js";
+import { useIsMobile } from "../hooks/useIsMobile.js";
 
 type LoadState = "loading" | "success" | "error";
 
@@ -28,6 +29,8 @@ export default function MyTickets() {
     const [errorMessage, setErrorMessage] = useState("");
     const [tickets, setTickets] = useState<TicketListItem[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const isMobile = useIsMobile();
+    const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
 
     const [search, setSearch] = useState("");
     const [categoryId, setCategoryId] = useState("");
@@ -210,38 +213,63 @@ export default function MyTickets() {
 
             {loadState === "success" && tickets.length > 0 && (
                 <>
-                    <div className="table-responsive">
-                        <table className="table align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Ticket No.</th>
-                                    <th>Created Date</th>
-                                    <th>Summary</th>
-                                    <th>Requested Priority</th>
-                                    <th>Current Status</th>
-                                    <th>Last Updated</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tickets.map((t) => (
-                                    <tr key={t.id}>
-                                        <td>
-                                            <Link to={`/tickets/${t.id}`}>{t.ticketNumber}</Link>
-                                        </td>
-                                        <td>{new Date(t.createdAt).toLocaleDateString()}</td>
-                                        <td>{t.summary}</td>
-                                        <td>
-                                            <PriorityBadge value={t.requestedPriority} />
-                                        </td>
-                                        <td>
-                                            <StatusBadge value={t.currentStatus} />
-                                        </td>
-                                        <td>{new Date(t.updatedAt).toLocaleDateString()}</td>
+                    {isMobile ? (
+                        <ul className="list-group">
+                            {tickets.map((t) => (
+                                <li key={t.id} className="list-group-item">
+                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <Link to={`/tickets/${t.id}`} className="fw-semibold">
+                                            {t.ticketNumber}
+                                        </Link>
+                                        <StatusBadge value={t.currentStatus} />
+                                    </div>
+                                    <div className="mb-2">{t.summary}</div>
+                                    <div className="text-muted small d-flex flex-wrap gap-2 align-items-center">
+                                        <span>{categoryNameById.get(t.categoryId) ?? "—"}</span>
+                                        <span>·</span>
+                                        <PriorityBadge value={t.requestedPriority} />
+                                        <span>·</span>
+                                        <span>Updated {new Date(t.updatedAt).toLocaleDateString()}</span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <div className="table-responsive">
+                            <table className="table align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Ticket No.</th>
+                                        <th>Created Date</th>
+                                        <th>Summary</th>
+                                        <th>Category</th>
+                                        <th>Requested Priority</th>
+                                        <th>Current Status</th>
+                                        <th>Last Updated</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    {tickets.map((t) => (
+                                        <tr key={t.id}>
+                                            <td>
+                                                <Link to={`/tickets/${t.id}`}>{t.ticketNumber}</Link>
+                                            </td>
+                                            <td>{new Date(t.createdAt).toLocaleDateString()}</td>
+                                            <td>{t.summary}</td>
+                                            <td>{categoryNameById.get(t.categoryId) ?? "—"}</td>
+                                            <td>
+                                                <PriorityBadge value={t.requestedPriority} />
+                                            </td>
+                                            <td>
+                                                <StatusBadge value={t.currentStatus} />
+                                            </td>
+                                            <td>{new Date(t.updatedAt).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
 
                     <div className="d-flex justify-content-between align-items-center mt-3">
                         <span className="text-muted small">

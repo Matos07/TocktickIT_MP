@@ -14,3 +14,6 @@ server/prisma/*.db
 .DS_Store
 
 uploads/
+
+test-results/
+*.spec.ts-snapshots/

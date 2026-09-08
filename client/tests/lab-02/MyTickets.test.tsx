@@ -4,6 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import MyTickets from "../../src/pages/MyTickets.js";
 import { RequesterContext } from "../../src/context/RequesterContext.js";
 import * as ticketsApi from "../../src/api/tickets.js";
+import { useIsMobile } from "../../src/hooks/useIsMobile.js";
+
+vi.mock("../../src/hooks/useIsMobile.js", () => ({ useIsMobile: vi.fn(() => false) }));
 
 const requesterA = { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com" };
 const requesterB = { id: 2, name: "David Lee", email: "david@example.com" };
@@ -136,4 +139,22 @@ describe("MyTickets", () => {
             expect(fetchSpy).toHaveBeenLastCalledWith(requesterA.id, expect.objectContaining({ page: 2 }));
         });
     });
+    it("renders the mobile card layout instead of the table when useIsMobile is true", async () => {
+        vi.mocked(useIsMobile).mockReturnValue(true);
+        vi.spyOn(ticketsApi, "fetchTickets").mockResolvedValue(
+            makeResponse([
+                {
+                    id: 1, ticketNumber: "TKT-2026-000001", summary: "Laptop issue", categoryId: 1,
+                    requestedPriority: "MEDIUM", itPriority: null, currentStatus: "NEW",
+                    createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
+                },
+            ])
+        );
+
+        renderWithContext();
+
+        expect(await screen.findByText("TKT-2026-000001")).toBeInTheDocument();
+        expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    });
 });
+

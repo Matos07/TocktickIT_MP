@@ -81,12 +81,13 @@ export default function TicketDetail() {
                 <div className="card-body">
                     <div className="row g-3">
                         <div className="col-6 col-md-3">
-                            <label className="form-label small fw-semibold">Ticket No.</label>
-                            <input className="form-control" style={fieldStyle} readOnly value={ticket.ticketNumber} />
+                            <label htmlFor="ticket-number" className="form-label small fw-semibold">Ticket No.</label>
+                            <input id="ticket-number" className="form-control" style={fieldStyle} readOnly value={ticket.ticketNumber} />
                         </div>
                         <div className="col-6 col-md-3">
-                            <label className="form-label small fw-semibold">Ticket Date</label>
+                            <label htmlFor="ticket-date" className="form-label small fw-semibold">Ticket Date</label>
                             <input
+                                id="ticket-date"
                                 className="form-control"
                                 style={fieldStyle}
                                 readOnly
@@ -94,7 +95,7 @@ export default function TicketDetail() {
                             />
                         </div>
                         <div className="col-6 col-md-3">
-                            <label className="form-label small fw-semibold">Requested Priority</label>
+                            <span className="form-label small fw-semibold d-block">Requested Priority</span>
                             <div>
                                 <span className="badge bg-light text-dark border">
                                     {PRIORITY_LABEL[ticket.requestedPriority]}
@@ -102,7 +103,7 @@ export default function TicketDetail() {
                             </div>
                         </div>
                         <div className="col-6 col-md-3">
-                            <label className="form-label small fw-semibold">Current Status</label>
+                            <span className="form-label small fw-semibold d-block">Current Status</span>
                             <div>
                                 <span className="badge" style={{ backgroundColor: "#EAF6EF", color: "#0B7A46" }}>
                                     {ticket.currentStatus}
@@ -111,13 +112,14 @@ export default function TicketDetail() {
                         </div>
 
                         <div className="col-12">
-                            <label className="form-label small fw-semibold">Summary</label>
-                            <input className="form-control" style={fieldStyle} readOnly value={ticket.summary} />
+                            <label htmlFor="ticket-summary" className="form-label small fw-semibold">Summary</label>
+                            <input id="ticket-summary" className="form-control" style={fieldStyle} readOnly value={ticket.summary} />
                         </div>
 
                         <div className="col-12">
-                            <label className="form-label small fw-semibold">Description</label>
+                            <label htmlFor="ticket-description" className="form-label small fw-semibold">Description</label>
                             <textarea
+                                id="ticket-description"
                                 className="form-control"
                                 style={fieldStyle}
                                 readOnly
