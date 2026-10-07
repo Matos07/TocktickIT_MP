@@ -1,52 +1,3 @@
-// import { useState } from "react";
-// import { checkSystem, Category } from "./api.ts";
-// import { Routes, Route, Link } from "react-router-dom";
-// import RequesterSelection from "./pages/RequesterSelection.js";
-// import { RequireRequester } from "./routes/RequireRequester.js";
-// import { useRequester } from "./context/RequesterContext.js";
-
-// // UI states you must handle for Issue 4: idle, loading, success, error.
-// type UiState = "idle" | "loading" | "success" | "error";
-
-// function AppShell() {
-//   const { requester, clearRequester } = useRequester();
-
-//   return (
-//     <div>
-//       <nav className="navbar navbar-dark" style={{ backgroundColor: "#006B3C" }}>
-//         <div className="container">
-//           <Link className="navbar-brand" to="/">
-//             TokTickIT
-//           </Link>
-//           {requester && (
-//             <div className="d-flex align-items-center gap-3 text-white">
-//               <span>{requester.name}</span>
-//               <button className="btn btn-outline-light btn-sm" onClick={clearRequester}>
-//                 Change Requester
-//               </button>
-//             </div>
-//           )}
-//         </div>
-//       </nav>
-
-//       <div className="container py-5">
-//         <p>Placeholder — My Tickets / Create Ticket screens land in Issues 5 & 7.</p>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default function App() {
-//   return (
-//     <Routes>
-//       <Route path="/select-requester" element={<RequesterSelection />} />
-//       <Route element={<RequireRequester />}>
-//         <Route path="/" element={<AppShell />} />
-//       </Route>
-//     </Routes>
-//   );
-// }
-
 import { Routes, Route, Link } from "react-router-dom";
 import RequesterSelection from "./pages/RequesterSelection.js";
 import CreateTicket from "./pages/CreateTicket.js";
@@ -54,6 +5,9 @@ import { RequireRequester } from "./routes/RequireRequester.js";
 import { useRequester } from "./context/RequesterContext.js";
 import MyTickets from "./pages/MyTickets.js";
 import TicketDetail from "./pages/TicketDetail.js";
+import Login from "./pages/Login.js";
+import ChangePassword from "./pages/ChangePassword.js";
+import { RequireAuthOnly } from "./routes/RequireAuthOnly.js";
 
 function AppShell() {
   const { requester, clearRequester } = useRequester();
@@ -98,6 +52,11 @@ function AppShell() {
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route element={<RequireAuthOnly />}>
+        <Route path="/change-password" element={<ChangePassword />} />
+      </Route>
+
       <Route path="/select-requester" element={<RequesterSelection />} />
       <Route element={<RequireRequester />}>
         <Route path="/*" element={<AppShell />} />
