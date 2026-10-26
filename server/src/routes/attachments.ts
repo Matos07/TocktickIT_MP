@@ -4,23 +4,18 @@ import path from "path";
 import multer from "multer";
 import { getPrisma } from "../prisma.js";
 import { upload, UPLOAD_DIR, UnsupportedFileTypeError } from "../upload.js";
+import { requireAuth, requirePasswordChanged, requireRole } from "../middleware/auth.js";
 
 export const attachmentsRouter = Router();
 export const ticketAttachmentsRouter = Router({ mergeParams: true });
 
 const MAX_ACTIVE_ATTACHMENTS = 5;
 
-async function resolveRequesterId(req: Request): Promise<number | null> {
-    const prisma = getPrisma();
-    const requesterId = Number(req.header("x-requester-id"));
-    if (!Number.isInteger(requesterId) || requesterId <= 0) return null;
-
-    const requester = await prisma.developmentRequester.findFirst({
-        where: { id: requesterId, isActive: true },
-        select: { id: true },
-    });
-    return requester ? requester.id : null;
-}
+// BR-02 / BR-03 / BR-21: sessions only, initial password already changed, Requester role.
+// IT Staff will reach attachments through staff endpoints in a later Issue.
+attachmentsRouter.use(requireAuth, requirePasswordChanged, requireRole("REQUESTER"));
+// requireAuth + requirePasswordChanged already ran in ticketsRouter for this nested router.
+ticketAttachmentsRouter.use(requireRole("REQUESTER"));
 
 function notFound(res: Response) {
     res.status(404).json({
@@ -58,8 +53,7 @@ ticketAttachmentsRouter.post(
         const ticketId = Number(req.params.id);
 
         try {
-            const requesterId = await resolveRequesterId(req);
-            if (!requesterId) return notFound(res);
+            const requesterId = req.user!.id;
 
             const ticket = await prisma.ticket.findFirst({
                 where: { id: ticketId, requesterId },
@@ -123,8 +117,7 @@ attachmentsRouter.get("/:id/download", async (req: Request, res: Response) => {
     const attachmentId = Number(req.params.id);
 
     try {
-        const requesterId = await resolveRequesterId(req);
-        if (!requesterId) return notFound(res);
+        const requesterId = req.user!.id;
 
         const attachment = await prisma.attachment.findFirst({
             where: { id: attachmentId, removedAt: null, ticket: { requesterId } },
@@ -152,8 +145,7 @@ attachmentsRouter.get("/:id", async (req: Request, res: Response) => {
     const attachmentId = Number(req.params.id);
 
     try {
-        const requesterId = await resolveRequesterId(req);
-        if (!requesterId) return notFound(res);
+        const requesterId = req.user!.id;
 
         const attachment = await prisma.attachment.findFirst({
             where: { id: attachmentId, ticket: { requesterId } },
@@ -186,8 +178,7 @@ attachmentsRouter.delete("/:id", async (req: Request, res: Response) => {
     const reason = typeof req.body?.reason === "string" ? req.body.reason.trim() : "";
 
     try {
-        const requesterId = await resolveRequesterId(req);
-        if (!requesterId) return notFound(res);
+        const requesterId = req.user!.id;
 
         if (reason.length < 3 || reason.length > 200) {
             res.status(400).json({

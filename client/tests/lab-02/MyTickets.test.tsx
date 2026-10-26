@@ -1,22 +1,16 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import MyTickets from "../../src/pages/MyTickets.js";
-import { RequesterContext } from "../../src/context/RequesterContext.js";
 import * as ticketsApi from "../../src/api/tickets.js";
 import { useIsMobile } from "../../src/hooks/useIsMobile.js";
 
 vi.mock("../../src/hooks/useIsMobile.js", () => ({ useIsMobile: vi.fn(() => false) }));
 
-const requesterA = { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com" };
-const requesterB = { id: 2, name: "David Lee", email: "david@example.com" };
-
-function renderWithContext(requester = requesterA, clearRequester = vi.fn()) {
+function renderWithContext() {
     return render(
         <MemoryRouter>
-            <RequesterContext.Provider value={{ requester, setRequester: vi.fn(), clearRequester }}>
-                <MyTickets />
-            </RequesterContext.Provider>
+            <MyTickets />
         </MemoryRouter>
     );
 }
@@ -28,19 +22,26 @@ function makeResponse(tickets: unknown[], overrides = {}) {
     };
 }
 
+const oneTicket = {
+    id: 1,
+    ticketNumber: "TKT-2026-000001",
+    summary: "Laptop issue",
+    categoryId: 1,
+    requestedPriority: "MEDIUM",
+    itPriority: null,
+    currentStatus: "NEW",
+    createdAt: "2026-09-01T00:00:00.000Z",
+    updatedAt: "2026-09-01T00:00:00.000Z",
+};
+
 describe("MyTickets", () => {
+    beforeEach(() => {
+        vi.mocked(useIsMobile).mockReturnValue(false);
+    });
     afterEach(() => vi.restoreAllMocks());
 
     it("AC-09: renders the tickets returned for the current requester", async () => {
-        vi.spyOn(ticketsApi, "fetchTickets").mockResolvedValue(
-            makeResponse([
-                {
-                    id: 1, ticketNumber: "TKT-2026-000001", summary: "Laptop issue", categoryId: 1,
-                    requestedPriority: "MEDIUM", itPriority: null, currentStatus: "NEW",
-                    createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
-                },
-            ])
-        );
+        vi.spyOn(ticketsApi, "fetchTickets").mockResolvedValue(makeResponse([oneTicket]));
 
         renderWithContext();
 
@@ -59,15 +60,7 @@ describe("MyTickets", () => {
 
     it("AC-11: shows a distinct no-results state when a search returns zero matches", async () => {
         vi.spyOn(ticketsApi, "fetchTickets")
-            .mockResolvedValueOnce(
-                makeResponse([
-                    {
-                        id: 1, ticketNumber: "TKT-2026-000001", summary: "Laptop issue", categoryId: 1,
-                        requestedPriority: "MEDIUM", itPriority: null, currentStatus: "NEW",
-                        createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
-                    },
-                ])
-            )
+            .mockResolvedValueOnce(makeResponse([oneTicket]))
             .mockResolvedValueOnce(makeResponse([], { totalItems: 0 }));
 
         renderWithContext();
@@ -79,51 +72,21 @@ describe("MyTickets", () => {
         expect(screen.queryByText(/you don't have any tickets yet/i)).not.toBeInTheDocument();
     });
 
-    it("AC-10: reloads the list when the selected requester changes", async () => {
-        const fetchSpy = vi
-            .spyOn(ticketsApi, "fetchTickets")
-            .mockResolvedValueOnce(makeResponse([{
-                id: 1, ticketNumber: "TKT-A", summary: "A's ticket", categoryId: 1,
-                requestedPriority: "LOW", itPriority: null, currentStatus: "NEW",
-                createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
-            }]))
-            .mockResolvedValueOnce(makeResponse([{
-                id: 2, ticketNumber: "TKT-B", summary: "B's ticket", categoryId: 1,
-                requestedPriority: "LOW", itPriority: null, currentStatus: "NEW",
-                createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
-            }]));
-
-        const { rerender } = render(
-            <MemoryRouter>
-                <RequesterContext.Provider value={{ requester: requesterA, setRequester: vi.fn(), clearRequester: vi.fn() }}>
-                    <MyTickets />
-                </RequesterContext.Provider>
-            </MemoryRouter>
-        );
-        await screen.findByText("A's ticket");
-
-        rerender(
-            <MemoryRouter>
-                <RequesterContext.Provider value={{ requester: requesterB, setRequester: vi.fn(), clearRequester: vi.fn() }}>
-                    <MyTickets />
-                </RequesterContext.Provider>
-            </MemoryRouter>
-        );
-
-        await waitFor(() => expect(screen.getByText("B's ticket")).toBeInTheDocument());
-        expect(screen.queryByText("A's ticket")).not.toBeInTheDocument();
-        expect(fetchSpy).toHaveBeenCalledTimes(2);
-    });
-
     it("AC-13: Next advances to page 2 and calls the API with the new page", async () => {
         const fetchSpy = vi
             .spyOn(ticketsApi, "fetchTickets")
             .mockResolvedValueOnce(
                 makeResponse(
                     Array.from({ length: 10 }, (_, i) => ({
-                        id: i, ticketNumber: `TKT-${i}`, summary: `Ticket ${i}`, categoryId: 1,
-                        requestedPriority: "LOW", itPriority: null, currentStatus: "NEW",
-                        createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z",
+                        id: i,
+                        ticketNumber: `TKT-${i}`,
+                        summary: `Ticket ${i}`,
+                        categoryId: 1,
+                        requestedPriority: "LOW",
+                        itPriority: null,
+                        currentStatus: "NEW",
+                        createdAt: "2026-09-01T00:00:00.000Z",
+                        updatedAt: "2026-09-01T00:00:00.000Z",
                     })),
                     { totalItems: 15, totalPages: 2 }
                 )
@@ -136,20 +99,13 @@ describe("MyTickets", () => {
         fireEvent.click(screen.getByRole("button", { name: /next/i }));
 
         await waitFor(() => {
-            expect(fetchSpy).toHaveBeenLastCalledWith(requesterA.id, expect.objectContaining({ page: 2 }));
+            expect(fetchSpy).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
         });
     });
+
     it("renders the mobile card layout instead of the table when useIsMobile is true", async () => {
         vi.mocked(useIsMobile).mockReturnValue(true);
-        vi.spyOn(ticketsApi, "fetchTickets").mockResolvedValue(
-            makeResponse([
-                {
-                    id: 1, ticketNumber: "TKT-2026-000001", summary: "Laptop issue", categoryId: 1,
-                    requestedPriority: "MEDIUM", itPriority: null, currentStatus: "NEW",
-                    createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z"
-                },
-            ])
-        );
+        vi.spyOn(ticketsApi, "fetchTickets").mockResolvedValue(makeResponse([oneTicket]));
 
         renderWithContext();
 
@@ -157,4 +113,3 @@ describe("MyTickets", () => {
         expect(screen.queryByRole("table")).not.toBeInTheDocument();
     });
 });
-

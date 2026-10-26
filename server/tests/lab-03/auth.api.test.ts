@@ -3,18 +3,17 @@ import request from "supertest";
 import { app } from "../../src/app.js";
 import { getPrisma } from "../../src/prisma.js";
 import { requirePasswordChanged } from "../../src/middleware/auth.js";
+import { createTestUser, TEST_PASSWORD } from "../helpers/auth.js";
 
 const prisma = getPrisma();
-const SEED_PASSWORD = "Password123!";
+const SEED_PASSWORD = TEST_PASSWORD; // the rest of the file keeps using this name
 
 let activeRequesterEmail: string;
 let inactiveUserEmail: string;
 
 beforeAll(async () => {
-    const active = await prisma.user.findFirstOrThrow({ where: { isActive: true, role: "REQUESTER" } });
-    activeRequesterEmail = active.email;
-    const inactive = await prisma.user.findFirstOrThrow({ where: { isActive: false } });
-    inactiveUserEmail = inactive.email;
+    activeRequesterEmail = (await createTestUser("REQUESTER", { mustChangePassword: true })).email;
+    inactiveUserEmail = (await createTestUser("REQUESTER", { isActive: false })).email;
 });
 
 describe("POST /api/auth/login", () => {

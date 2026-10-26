@@ -2,22 +2,16 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import CreateTicket from "../../src/pages/CreateTicket.js";
-import { RequesterContext } from "../../src/context/RequesterContext.js";
+
 import * as categoriesApi from "../../src/api/categories.js";
 import * as relatedSystemsApi from "../../src/api/related-systems.js";
 import * as ticketsApi from "../../src/api/tickets.js";
 import * as attachmentsApi from "../../src/api/attachments.js";
 
-const mockRequester = { id: 1, name: "Jennifer Anderson", email: "jennifer@example.com" };
-
 function renderWithContext() {
     return render(
         <MemoryRouter>
-            <RequesterContext.Provider
-                value={{ requester: mockRequester, setRequester: vi.fn(), clearRequester: vi.fn() }}
-            >
-                <CreateTicket />
-            </RequesterContext.Provider>
+            <CreateTicket />
         </MemoryRouter>
     );
 }
@@ -230,6 +224,6 @@ it("AC-02: uploads selected attachments after ticket creation succeeds", async (
     fireEvent.click(screen.getByRole("button", { name: /submit/i }));
 
     await waitFor(() => {
-        expect(uploadSpy).toHaveBeenCalledWith(1, 42, file);
+        expect(uploadSpy).toHaveBeenCalledWith(42, file);
     });
 });
