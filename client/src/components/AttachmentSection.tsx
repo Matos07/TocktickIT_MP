@@ -3,7 +3,6 @@ import { AttachmentMeta } from "../api/tickets.js";
 import { uploadAttachment, downloadAttachment, removeAttachment } from "../api/attachments.js";
 
 interface Props {
-    requesterId: number;
     ticketId: number;
     attachments: AttachmentMeta[];
     onChange: () => void;
@@ -13,7 +12,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
 
-export default function AttachmentSection({ requesterId, ticketId, attachments, onChange }: Props) {
+export default function AttachmentSection({ ticketId, attachments, onChange }: Props) {
     const [uploadError, setUploadError] = useState("");
     const [uploading, setUploading] = useState(false);
     const [pendingRemovalId, setPendingRemovalId] = useState<number | null>(null);
@@ -44,7 +43,7 @@ export default function AttachmentSection({ requesterId, ticketId, attachments, 
 
         setUploading(true);
         try {
-            await uploadAttachment(requesterId, ticketId, file);
+            await uploadAttachment(ticketId, file);
             onChange();
         } catch (err) {
             setUploadError(err instanceof Error ? err.message : "Failed to upload attachment.");
@@ -56,7 +55,7 @@ export default function AttachmentSection({ requesterId, ticketId, attachments, 
     async function handleDownload(attachment: AttachmentMeta) {
         setActionError("");
         try {
-            const blob = await downloadAttachment(requesterId, attachment.id);
+            const blob = await downloadAttachment(attachment.id);
             const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
             link.href = url;
@@ -83,7 +82,7 @@ export default function AttachmentSection({ requesterId, ticketId, attachments, 
         if (pendingRemovalId === null) return;
         setActionError("");
         try {
-            await removeAttachment(requesterId, pendingRemovalId, reason);
+            await removeAttachment(pendingRemovalId, reason);
             setPendingRemovalId(null);
             setReason("");
             onChange();

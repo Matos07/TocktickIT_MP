@@ -2,22 +2,24 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { getPrisma } from "./prisma.js";
-import { requestersRouter } from "./routes/requesters.js";
 import { ticketsRouter } from "./routes/tickets.js";
 import { relatedSystemsRouter } from "./routes/related-systems.js";
 import { attachmentsRouter } from "./routes/attachments.js";
 import { authRouter } from "./routes/auth.js";
 
+// The Express app is exported separately from app.listen() (see index.ts) so
+// Supertest can import `app` without opening a port. Do not merge these files.
 export const app = express();
 
-app.use(cors({ origin: true, credentials: true })); // credentials:true so the cookie round-trips from Vite
+app.use(cors({ origin: true, credentials: true })); // credentials: the session cookie must round-trip from Vite
 app.use(express.json());
-app.use(cookieParser(process.env.SESSION_SECRET));
+app.use(cookieParser(process.env.SESSION_SECRET ?? "dev-only-change-me"));
 
 app.use("/api/auth", authRouter);
-app.use("/api/attachments", attachmentsRouter);
-app.use("/api/requesters", requestersRouter);
 app.use("/api/tickets", ticketsRouter);
+app.use("/api/attachments", attachmentsRouter);
+
+// Reference data stays public: it is not sensitive and Lab 1 tests rely on it.
 app.use("/api/related-systems", relatedSystemsRouter);
 
 app.get("/api/health", (_req: Request, res: Response) => {

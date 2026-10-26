@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { useRequester } from "../context/RequesterContext.js";
 import { fetchTickets, TicketListItem } from "../api/tickets.js";
 import { fetchCategories, Category } from "../api/categories.js";
 import { useIsMobile } from "../hooks/useIsMobile.js";
@@ -23,7 +22,7 @@ function StatusBadge({ value }: { value: string }) {
 }
 
 export default function MyTickets() {
-    const { requester } = useRequester();
+
 
     const [loadState, setLoadState] = useState<LoadState>("loading");
     const [errorMessage, setErrorMessage] = useState("");
@@ -44,10 +43,10 @@ export default function MyTickets() {
     const hasActiveFilters = search !== "" || categoryId !== "" || requestedPriority !== "";
 
     const load = useCallback(async () => {
-        if (!requester) return;
+
         setLoadState("loading");
         try {
-            const res = await fetchTickets(requester.id, {
+            const res = await fetchTickets({
                 search: search || undefined,
                 categoryId: categoryId ? Number(categoryId) : undefined,
                 requestedPriority: (requestedPriority as "LOW" | "MEDIUM" | "HIGH") || undefined,
@@ -62,11 +61,9 @@ export default function MyTickets() {
             setErrorMessage(err instanceof Error ? err.message : "Failed to load tickets.");
             setLoadState("error");
         }
-    }, [requester, search, categoryId, requestedPriority, sortBy, sortOrder, page]);
+    }, [search, categoryId, requestedPriority, sortBy, sortOrder, page]);
 
-    useEffect(() => {
-        setPage(1);
-    }, [requester?.id]);
+
 
     useEffect(() => {
         load();

@@ -16,22 +16,27 @@ declare global {
 
 // Attaches req.user from the session cookie, or responds 401.
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-    const token = req.signedCookies?.[COOKIE_NAME];
-    const user = await validateSession(token);
+    try {
+        const token = req.signedCookies?.[COOKIE_NAME];
+        const user = await validateSession(token);
 
-    if (!user) {
-        res.status(401).json({ error: { code: "UNAUTHENTICATED", message: "Not authenticated." } });
-        return;
+        if (!user) {
+            res.status(401).json({ error: { code: "UNAUTHENTICATED", message: "Not authenticated." } });
+            return;
+        }
+
+        req.user = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            mustChangePassword: user.mustChangePassword,
+        };
+        next();
+    } catch (err) {
+        console.error("[requireAuth]", err);
+        res.status(500).json({ error: { code: "SERVER_ERROR", message: "Authentication check failed." } });
     }
-
-    req.user = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        mustChangePassword: user.mustChangePassword,
-    };
-    next();
 }
 
 // Blocks access until the user has changed their initial password (BR-02).

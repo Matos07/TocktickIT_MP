@@ -1,27 +1,31 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useRequester } from "../context/RequesterContext.js";
-import { fetchTicket, TicketDetail as TicketDetailType, TicketNotFoundError } from "../api/tickets.js";
+import {
+    fetchTicket,
+    markResolvedByRequester,
+    TicketDetail as TicketDetailType,
+    TicketNotFoundError,
+} from "../api/tickets.js";
 import AttachmentSection from "../components/AttachmentSection.js";
+import CommentsSection from "../components/CommentsSection.js";
+import { PRIORITY_LABEL, STATUS_LABEL } from "../lib/labels.js";
 
 type LoadState = "loading" | "success" | "not-found" | "error";
 
-const PRIORITY_LABEL: Record<string, string> = { LOW: "Low", MEDIUM: "Medium", HIGH: "High" };
-
 export default function TicketDetail() {
     const { id } = useParams<{ id: string }>();
-    const { requester } = useRequester();
 
     const [loadState, setLoadState] = useState<LoadState>("loading");
     const [errorMessage, setErrorMessage] = useState("");
     const [ticket, setTicket] = useState<TicketDetailType | null>(null);
+    const [resolving, setResolving] = useState(false);
+    const [resolveError, setResolveError] = useState("");
 
     const load = useCallback(async () => {
-        if (!requester || !id) return;
+        if (!id) return;
         setLoadState("loading");
         try {
-            const data = await fetchTicket(requester.id, Number(id));
-            setTicket(data);
+            setTicket(await fetchTicket(Number(id)));
             setLoadState("success");
         } catch (err) {
             if (err instanceof TicketNotFoundError) {
@@ -31,11 +35,26 @@ export default function TicketDetail() {
             setErrorMessage(err instanceof Error ? err.message : "Failed to load ticket.");
             setLoadState("error");
         }
-    }, [requester, id]);
+    }, [id]);
 
     useEffect(() => {
         load();
     }, [load]);
+
+    // AC-10 / BR-05: a hint for IT Staff only — the formal status is never changed from here.
+    async function handleMarkResolved() {
+        if (!ticket) return;
+        setResolving(true);
+        setResolveError("");
+        try {
+            await markResolvedByRequester(ticket.id);
+            setTicket({ ...ticket, requesterConfirmedResolved: true });
+        } catch (err) {
+            setResolveError(err instanceof Error ? err.message : "Failed to update ticket.");
+        } finally {
+            setResolving(false);
+        }
+    }
 
     if (loadState === "loading") {
         return (
@@ -50,9 +69,7 @@ export default function TicketDetail() {
             <div className="container py-4">
                 <div className="alert alert-warning">
                     <strong>Ticket not found</strong>
-                    <p className="mb-0 mt-1">
-                        This ticket doesn't exist, or doesn't belong to the current requester.
-                    </p>
+                    <p className="mb-0 mt-1">This ticket doesn't exist, or you don't have access to it.</p>
                 </div>
             </div>
         );
@@ -69,7 +86,7 @@ export default function TicketDetail() {
         );
     }
 
-    if (!ticket || !requester) return null;
+    if (!ticket) return null;
 
     const fieldStyle = { backgroundColor: "#F1F3EE", border: "none" };
 
@@ -96,19 +113,15 @@ export default function TicketDetail() {
                         </div>
                         <div className="col-6 col-md-3">
                             <span className="form-label small fw-semibold d-block">Requested Priority</span>
-                            <div>
-                                <span className="badge bg-light text-dark border">
-                                    {PRIORITY_LABEL[ticket.requestedPriority]}
-                                </span>
-                            </div>
+                            <span className="badge bg-light text-dark border">
+                                {PRIORITY_LABEL[ticket.requestedPriority]}
+                            </span>
                         </div>
                         <div className="col-6 col-md-3">
                             <span className="form-label small fw-semibold d-block">Current Status</span>
-                            <div>
-                                <span className="badge" style={{ backgroundColor: "#EAF6EF", color: "#0B7A46" }}>
-                                    {ticket.currentStatus}
-                                </span>
-                            </div>
+                            <span className="badge" style={{ backgroundColor: "#EAF6EF", color: "#0B7A46" }}>
+                                {STATUS_LABEL[ticket.currentStatus] ?? ticket.currentStatus}
+                            </span>
                         </div>
 
                         <div className="col-12">
@@ -128,15 +141,28 @@ export default function TicketDetail() {
                             />
                         </div>
                     </div>
+
+                    <div className="mt-3">
+                        {ticket.requesterConfirmedResolved ? (
+                            <div className="small" style={{ color: "#0B7A46" }}>
+                                ✓ You indicated this problem appears resolved. IT Staff will review and formally resolve the ticket.
+                            </div>
+                        ) : (
+                            <button
+                                className="btn btn-outline-success btn-sm"
+                                disabled={resolving}
+                                onClick={handleMarkResolved}
+                            >
+                                {resolving ? "Saving…" : "Mark problem as resolved"}
+                            </button>
+                        )}
+                        {resolveError && <div className="text-danger small mt-1">{resolveError}</div>}
+                    </div>
                 </div>
             </div>
 
-            <AttachmentSection
-                requesterId={requester.id}
-                ticketId={ticket.id}
-                attachments={ticket.attachments}
-                onChange={load}
-            />
+            <AttachmentSection ticketId={ticket.id} attachments={ticket.attachments} onChange={load} />
+            <CommentsSection ticketId={ticket.id} />
         </div>
     );
 }

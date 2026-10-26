@@ -1,5 +1,4 @@
 import { useEffect, useState, FormEvent } from "react";
-import { useRequester } from "../context/RequesterContext.js";
 import { fetchCategories, Category } from "../api/categories.js";
 import { fetchRelatedSystems, RelatedSystem } from "../api/related-systems.js";
 import { createTicket, CreateTicketError, Ticket, RequestedPriority } from "../api/tickets.js";
@@ -19,7 +18,7 @@ interface PendingFile {
 }
 
 export default function CreateTicket() {
-    const { requester } = useRequester();
+
 
     const [refState, setRefState] = useState<ReferenceDataState>("loading");
     const [refError, setRefError] = useState("");
@@ -119,13 +118,12 @@ export default function CreateTicket() {
         setFieldErrors(errors);
 
         if (Object.keys(errors).length > 0) return;
-        if (!requester) return;
 
         setSubmitState("submitting");
         setSubmitError("");
 
         try {
-            const ticket = await createTicket(requester.id, {
+            const ticket = await createTicket({
                 categoryId: Number(categoryId),
                 relatedSystemId: Number(relatedSystemId),
                 summary: summary.trim(),
@@ -139,7 +137,7 @@ export default function CreateTicket() {
             for (const pf of pendingFiles) {
                 if (pf.error) continue; // already-rejected files were never meant to upload
                 try {
-                    await uploadAttachment(requester.id, ticket.id, pf.file);
+                    await uploadAttachment(ticket.id, pf.file);
                 } catch {
                     failedUploads.push(pf.file.name);
                 }
