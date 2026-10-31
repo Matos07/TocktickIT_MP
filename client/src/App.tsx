@@ -1,14 +1,26 @@
-import { Routes, Route, Link, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useNavigate } from "react-router-dom";
 import CreateTicket from "./pages/CreateTicket.js";
 import MyTickets from "./pages/MyTickets.js";
 import TicketDetail from "./pages/TicketDetail.js";
+import StaffTicketQueue from "./pages/StaffTicketQueue.js";
 import Login from "./pages/Login.js";
 import ChangePassword from "./pages/ChangePassword.js";
 import { RequireAuth } from "./routes/RequireAuth.js";
 import { RequireRole } from "./routes/RequireRole.js";
+import { RoleBadge } from "./components/Badges.js";
 import { useAuth } from "./context/AuthContext.js";
 import { logout } from "./api/auth.js";
-import { ROLE_LABEL } from "./lib/labels.js";
+
+// "/" is the role-aware home: Requesters see My Tickets, IT Staff and Administrators the queue.
+function Home() {
+  const { user } = useAuth();
+  return user?.role === "REQUESTER" ? <MyTickets /> : <Navigate to="/queue" replace />;
+}
+
+// Temporary: replaced by the real IT Staff Ticket Detail screen in the next Issue.
+function StaffTicketDetailPlaceholder() {
+  return <p className="text-muted">The IT Staff Ticket Detail screen arrives in the next Issue.</p>;
+}
 
 function AppShell() {
   const { user, setUser } = useAuth();
@@ -40,10 +52,17 @@ function AppShell() {
               </Link>
             </div>
           )}
+          {(user?.role === "IT_STAFF" || user?.role === "ADMINISTRATOR") && (
+            <div className="d-flex gap-3">
+              <Link className="nav-link text-white" to="/queue">
+                Ticket Queue
+              </Link>
+            </div>
+          )}
           {user && (
             <div className="d-flex align-items-center gap-3 text-white">
               <span>{user.name}</span>
-              <span className="badge bg-light text-dark">{ROLE_LABEL[user.role]}</span>
+              <RoleBadge value={user.role} />
               <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
                 Logout
               </button>
@@ -54,10 +73,14 @@ function AppShell() {
 
       <div className="container py-5">
         <Routes>
+          <Route path="/" element={<Home />} />
           <Route element={<RequireRole roles={["REQUESTER"]} />}>
-            <Route path="/" element={<MyTickets />} />
             <Route path="/create-ticket" element={<CreateTicket />} />
             <Route path="/tickets/:id" element={<TicketDetail />} />
+          </Route>
+          <Route element={<RequireRole roles={["IT_STAFF", "ADMINISTRATOR"]} />}>
+            <Route path="/queue" element={<StaffTicketQueue />} />
+            <Route path="/staff/tickets/:id" element={<StaffTicketDetailPlaceholder />} />
           </Route>
         </Routes>
       </div>

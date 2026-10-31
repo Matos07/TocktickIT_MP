@@ -6,6 +6,7 @@ import { ticketsRouter } from "./routes/tickets.js";
 import { relatedSystemsRouter } from "./routes/related-systems.js";
 import { attachmentsRouter } from "./routes/attachments.js";
 import { authRouter } from "./routes/auth.js";
+import { staffRouter } from "./routes/staff.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -14,6 +15,7 @@ export const app = express();
 app.use(cors({ origin: true, credentials: true })); // credentials: the session cookie must round-trip from Vite
 app.use(express.json());
 app.use(cookieParser(process.env.SESSION_SECRET ?? "dev-only-change-me"));
+app.use("/api/staff", staffRouter);
 
 app.use("/api/auth", authRouter);
 app.use("/api/tickets", ticketsRouter);

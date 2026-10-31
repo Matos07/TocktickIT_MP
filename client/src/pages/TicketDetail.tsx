@@ -8,8 +8,7 @@ import {
 } from "../api/tickets.js";
 import AttachmentSection from "../components/AttachmentSection.js";
 import CommentsSection from "../components/CommentsSection.js";
-import { PRIORITY_LABEL, STATUS_LABEL } from "../lib/labels.js";
-
+import { PriorityBadge, StatusBadge } from "../components/Badges.js";
 type LoadState = "loading" | "success" | "not-found" | "error";
 
 export default function TicketDetail() {
@@ -113,15 +112,11 @@ export default function TicketDetail() {
                         </div>
                         <div className="col-6 col-md-3">
                             <span className="form-label small fw-semibold d-block">Requested Priority</span>
-                            <span className="badge bg-light text-dark border">
-                                {PRIORITY_LABEL[ticket.requestedPriority]}
-                            </span>
+                            <PriorityBadge value={ticket.requestedPriority} />
                         </div>
                         <div className="col-6 col-md-3">
                             <span className="form-label small fw-semibold d-block">Current Status</span>
-                            <span className="badge" style={{ backgroundColor: "#EAF6EF", color: "#0B7A46" }}>
-                                {STATUS_LABEL[ticket.currentStatus] ?? ticket.currentStatus}
-                            </span>
+                            <StatusBadge value={ticket.currentStatus} />
                         </div>
 
                         <div className="col-12">

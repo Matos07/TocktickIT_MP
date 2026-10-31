@@ -39,6 +39,8 @@ describe("AUTH-05: unauthenticated access", () => {
         ["get", "/api/tickets/1/comments"],
         ["post", "/api/tickets/1/comments"],
         ["patch", "/api/tickets/1/resolved-by-requester"],
+        ["get", "/api/staff/tickets"],
+        ["get", "/api/staff/assignees"],
     ])("%s %s returns 401 without a session", async (method, path) => {
         const res = await (request(app) as any)[method](path);
         expect(res.status).toBe(401);
@@ -100,5 +102,14 @@ describe("AC-02 / BR-02: mustChangePassword gate on real routes", () => {
         expect(change.status).toBe(200);
 
         expect((await agent.get("/api/tickets")).status).toBe(200);
+    });
+});
+
+describe("AUTH-03: a Requester cannot use staff endpoints", () => {
+    it.each(["/api/staff/tickets", "/api/staff/assignees"])("GET %s returns 403 for a Requester", async (path) => {
+        const res = await me.agent.get(path);
+
+        expect(res.status).toBe(403);
+        expect(res.body.error.code).toBe("FORBIDDEN");
     });
 });
