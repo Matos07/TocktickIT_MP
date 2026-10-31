@@ -12,3 +12,11 @@ export async function readErrorMessage(res: Response, fallback: string): Promise
         return fallback;
     }
 }
+
+// Thrown by wrappers when the server answers 403, so a page can show the Forbidden state.
+export class ForbiddenError extends Error {
+    constructor() {
+        super("Access denied.");
+        this.name = "ForbiddenError";
+    }
+}

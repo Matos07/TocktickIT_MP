@@ -3,23 +3,11 @@ import { Link } from "react-router-dom";
 import { fetchTickets, TicketListItem } from "../api/tickets.js";
 import { fetchCategories, Category } from "../api/categories.js";
 import { useIsMobile } from "../hooks/useIsMobile.js";
+import { PriorityBadge, StatusBadge } from "../components/Badges.js";
 
 type LoadState = "loading" | "success" | "error";
 
-const PRIORITY_BADGE: Record<string, string> = {
-    LOW: "bg-light text-success border border-success",
-    MEDIUM: "bg-warning-subtle text-warning-emphasis",
-    HIGH: "bg-danger-subtle text-danger-emphasis",
-};
 
-function PriorityBadge({ value }: { value: string | null }) {
-    if (!value) return <span className="text-muted small">—</span>;
-    return <span className={`badge ${PRIORITY_BADGE[value] ?? "bg-secondary"}`}>{value}</span>;
-}
-
-function StatusBadge({ value }: { value: string }) {
-    return <span className="badge" style={{ backgroundColor: "#EAF6EF", color: "#0B7A46" }}>{value}</span>;
-}
 
 export default function MyTickets() {
 

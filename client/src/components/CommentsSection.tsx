@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, FormEvent } from "react";
 import { fetchComments, postComment, PublicCommentDto } from "../api/tickets.js";
-import { ROLE_LABEL } from "../lib/labels.js";
+import { RoleBadge } from "./Badges.js";
 
 const MAX_LENGTH = 2000; // BR-19
 
@@ -81,8 +81,8 @@ export default function CommentsSection({ ticketId }: { ticketId: number }) {
                                 <div className="d-flex justify-content-between align-items-start">
                                     <div>
                                         <strong>{c.authorName}</strong>
-                                        <span className="badge bg-light text-dark border ms-2">
-                                            {ROLE_LABEL[c.authorRole] ?? c.authorRole}
+                                        <span className="ms-2">
+                                            <RoleBadge value={c.authorRole} />
                                         </span>
                                     </div>
                                     <span className="text-muted small">{new Date(c.createdAt).toLocaleString()}</span>

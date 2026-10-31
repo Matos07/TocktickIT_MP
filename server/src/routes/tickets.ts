@@ -4,6 +4,7 @@ import { validateCreateTicketInput } from "../validation/ticket.js";
 import { ticketAttachmentsRouter } from "./attachments.js";
 import { requireAuth, requirePasswordChanged, requireRole } from "../middleware/auth.js";
 import { commentsRouter } from "./comments.js";
+import { parseTicketListQuery } from "../lib/ticketQuery.js";
 
 export const ticketsRouter = Router();
 
@@ -89,12 +90,48 @@ ticketsRouter.post("/", requireRole("REQUESTER"), async (req: Request, res: Resp
     }
 });
 
-const SORTABLE_FIELDS = new Set(["createdAt", "updatedAt", "ticketNumber"]);
-const SORT_ORDERS = new Set(["asc", "desc"]);
-const VALID_STATUSES = new Set([
-    "NEW", "OPEN", "IN_PROGRESS", "WAITING_FOR_REQUESTER", "RESOLVED", "CLOSED", "REOPENED", "CANCELLED",
-]);
-const VALID_PRIORITIES = new Set(["LOW", "MEDIUM", "HIGH"]);
+// GET /api/tickets — search/filter/sort/pagination, scoped to the session user.
+// AC-09..AC-13, BR-08, BR-09, BR-10, BR-23. The query contract is shared with the IT Staff queue.
+ticketsRouter.get("/", requireRole("REQUESTER"), async (req: Request, res: Response) => {
+    const prisma = getPrisma();
+
+    try {
+        const { where, orderBy, page, pageSize } = parseTicketListQuery(req.query, {
+            requesterId: req.user!.id,
+        });
+
+        const [totalItems, tickets] = await Promise.all([
+            prisma.ticket.count({ where }),
+            prisma.ticket.findMany({
+                where,
+                orderBy,
+                skip: (page - 1) * pageSize,
+                take: pageSize,
+                select: {
+                    id: true,
+                    ticketNumber: true,
+                    summary: true,
+                    categoryId: true,
+                    requestedPriority: true,
+                    itPriority: true,
+                    currentStatus: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+            }),
+        ]);
+
+        res.status(200).json({
+            data: tickets,
+            pagination: { page, pageSize, totalItems, totalPages: Math.ceil(totalItems / pageSize) || 0 },
+        });
+    } catch (err) {
+        console.error("[GET /api/tickets]", err);
+        res.status(500).json({
+            error: { code: "SERVER_ERROR", message: "Failed to retrieve tickets. Please try again." },
+        });
+    }
+});
 
 // GET /api/tickets — search/filter/sort/pagination, scoped to the session user.
 // AC-09..AC-13, BR-08, BR-09, BR-10, BR-23.
