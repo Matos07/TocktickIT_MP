@@ -10,6 +10,7 @@ import { RequireRole } from "./routes/RequireRole.js";
 import { RoleBadge } from "./components/Badges.js";
 import { useAuth } from "./context/AuthContext.js";
 import { logout } from "./api/auth.js";
+import StaffTicketDetail from "./pages/StaffTicketDetail.js";
 
 // "/" is the role-aware home: Requesters see My Tickets, IT Staff and Administrators the queue.
 function Home() {
@@ -17,10 +18,7 @@ function Home() {
   return user?.role === "REQUESTER" ? <MyTickets /> : <Navigate to="/queue" replace />;
 }
 
-// Temporary: replaced by the real IT Staff Ticket Detail screen in the next Issue.
-function StaffTicketDetailPlaceholder() {
-  return <p className="text-muted">The IT Staff Ticket Detail screen arrives in the next Issue.</p>;
-}
+
 
 function AppShell() {
   const { user, setUser } = useAuth();
@@ -80,7 +78,7 @@ function AppShell() {
           </Route>
           <Route element={<RequireRole roles={["IT_STAFF", "ADMINISTRATOR"]} />}>
             <Route path="/queue" element={<StaffTicketQueue />} />
-            <Route path="/staff/tickets/:id" element={<StaffTicketDetailPlaceholder />} />
+            <Route path="/staff/tickets/:id" element={<StaffTicketDetail />} />
           </Route>
         </Routes>
       </div>

@@ -118,7 +118,10 @@ export default function TicketDetail() {
                             <span className="form-label small fw-semibold d-block">Current Status</span>
                             <StatusBadge value={ticket.currentStatus} />
                         </div>
-
+                        <div className="col-6 col-md-3">
+                            <span className="form-label small fw-semibold d-block">IT Priority</span>
+                            <PriorityBadge value={ticket.itPriority} />
+                        </div>
                         <div className="col-12">
                             <label htmlFor="ticket-summary" className="form-label small fw-semibold">Summary</label>
                             <input id="ticket-summary" className="form-control" style={fieldStyle} readOnly value={ticket.summary} />

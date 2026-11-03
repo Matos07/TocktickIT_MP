@@ -90,6 +90,20 @@ describe("TicketDetail", () => {
         expect(within(removedRow).queryByRole("button", { name: /download/i })).not.toBeInTheDocument();
         expect(within(removedRow).getByText("Removed")).toBeInTheDocument();
     });
+    it("AC-15: shows the IT Priority set by IT Staff as read-only", async () => {
+        vi.spyOn(ticketsApi, "fetchTicket").mockResolvedValue({
+            ...baseTicket,
+            requestedPriority: "LOW",
+            itPriority: "HIGH",
+            attachments: [],
+        });
+
+        renderAtTicket("42");
+
+        expect(await screen.findByText("IT Priority")).toBeInTheDocument();
+        expect(screen.getByText("High")).toBeInTheDocument();
+        expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    });
 });
 
 describe("TicketDetail — Public Comments", () => {

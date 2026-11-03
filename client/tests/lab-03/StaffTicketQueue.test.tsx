@@ -192,4 +192,43 @@ describe("StaffTicketQueue", () => {
         expect(screen.queryByRole("table")).not.toBeInTheDocument();
         expect(within(card).getByText("Unassigned")).toBeInTheDocument();
     });
+
+    it("UI-05: Claim on an unassigned ticket calls the API and refreshes the row", async () => {
+        const claimSpy = vi.spyOn(staffApi, "claimTicket").mockResolvedValue({} as staffApi.StaffTicketDetail);
+        vi.spyOn(staffApi, "fetchStaffTickets")
+            .mockResolvedValueOnce(makeResponse([unassigned]))
+            .mockResolvedValue(
+                makeResponse([{ ...unassigned, ticketOwnerId: 7, ticketOwnerName: "Michael Brown", currentStatus: "OPEN" }])
+            );
+
+        renderQueue();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Claim TKT-2026-000002" }));
+
+        await waitFor(() => expect(claimSpy).toHaveBeenCalledWith(2));
+        expect(await screen.findByText("Michael Brown")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /^Claim/ })).not.toBeInTheDocument();
+    });
+
+    it("an assigned ticket has no Claim button", async () => {
+        vi.spyOn(staffApi, "fetchStaffTickets").mockResolvedValue(makeResponse([makeTicket()]));
+
+        renderQueue();
+
+        await screen.findByRole("link", { name: "TKT-2026-000001" });
+        expect(screen.queryByRole("button", { name: /^Claim/ })).not.toBeInTheDocument();
+    });
+
+    it("shows the server's message when a claim is refused", async () => {
+        vi.spyOn(staffApi, "claimTicket").mockRejectedValue(
+            new Error("This ticket is already owned by another user. Use reassign instead.")
+        );
+        vi.spyOn(staffApi, "fetchStaffTickets").mockResolvedValue(makeResponse([unassigned]));
+
+        renderQueue();
+
+        fireEvent.click(await screen.findByRole("button", { name: "Claim TKT-2026-000002" }));
+
+        expect(await screen.findByText(/already owned by another user/i)).toBeInTheDocument();
+    });
 });
