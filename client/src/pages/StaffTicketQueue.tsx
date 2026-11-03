@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-import { Assignee, fetchAssignees, fetchStaffTickets, StaffTicketListItem } from "../api/staff.js";
+import { Assignee, claimTicket, fetchAssignees, fetchStaffTickets, StaffTicketListItem } from "../api/staff.js";
 import { fetchCategories, Category } from "../api/categories.js";
 import { ForbiddenError } from "../api/http.js";
 import { RequestedPriority, TicketStatus } from "../api/tickets.js";
@@ -20,8 +20,29 @@ const SORT_OPTIONS = [
     { value: "ticketNumber:desc", label: "Ticket No. (Z–A)" },
 ];
 
-function OwnerName({ name }: { name: string | null }) {
-    return name ? <>{name}</> : <em className="text-muted">Unassigned</em>;
+function OwnerCell({
+    ticket,
+    busy,
+    onClaim,
+}: {
+    ticket: StaffTicketListItem;
+    busy: boolean;
+    onClaim: (ticket: StaffTicketListItem) => void;
+}) {
+    if (ticket.ticketOwnerName) return <>{ticket.ticketOwnerName}</>;
+    return (
+        <span className="d-inline-flex align-items-center gap-2">
+            <em className="text-muted">Unassigned</em>
+            <button
+                className="btn btn-outline-success btn-sm py-0"
+                disabled={busy}
+                aria-label={`Claim ${ticket.ticketNumber}`}
+                onClick={() => onClaim(ticket)}
+            >
+                {busy ? "Claiming…" : "Claim"}
+            </button>
+        </span>
+    );
 }
 
 export default function StaffTicketQueue() {
@@ -43,6 +64,9 @@ export default function StaffTicketQueue() {
     const [itPriority, setItPriority] = useState("");
     const [sort, setSort] = useState("createdAt:desc");
     const [page, setPage] = useState(1);
+
+    const [claimingId, setClaimingId] = useState<number | null>(null);
+    const [claimError, setClaimError] = useState("");
 
     const latestRequest = useRef(0);
     const categoryNameById = new Map(categories.map((c) => [c.id, c.name]));
@@ -105,6 +129,18 @@ export default function StaffTicketQueue() {
         setRequestedPriority("");
         setItPriority("");
         setPage(1);
+    }
+    async function handleClaim(ticket: StaffTicketListItem) {
+        setClaimingId(ticket.id);
+        setClaimError("");
+        try {
+            await claimTicket(ticket.id);
+        } catch (err) {
+            setClaimError(err instanceof Error ? err.message : "Failed to claim the ticket.");
+        } finally {
+            setClaimingId(null);
+            load(); // refresh either way: after a conflict the row shows the real owner
+        }
     }
 
     if (loadState === "forbidden") return <Forbidden />;
@@ -232,7 +268,11 @@ export default function StaffTicketQueue() {
                     </select>
                 </div>
             </div>
-
+            {claimError && (
+                <div className="alert alert-danger" role="alert">
+                    {claimError}
+                </div>
+            )}
             {loadState === "loading" && <p>Loading ticket queue…</p>}
 
             {loadState === "error" && (
@@ -277,7 +317,7 @@ export default function StaffTicketQueue() {
                                         <span>→</span>
                                         <PriorityBadge value={t.itPriority} />
                                         <span>·</span>
-                                        <OwnerName name={t.ticketOwnerName} />
+                                        <OwnerCell ticket={t} busy={claimingId === t.id} onClaim={handleClaim} />
                                     </div>
                                 </li>
                             ))}
@@ -316,7 +356,7 @@ export default function StaffTicketQueue() {
                                                 <StatusBadge value={t.currentStatus} />
                                             </td>
                                             <td>
-                                                <OwnerName name={t.ticketOwnerName} />
+                                                <OwnerCell ticket={t} busy={claimingId === t.id} onClaim={handleClaim} />
                                             </td>
                                         </tr>
                                     ))}

@@ -5,6 +5,7 @@ import { ticketAttachmentsRouter } from "./attachments.js";
 import { requireAuth, requirePasswordChanged, requireRole } from "../middleware/auth.js";
 import { commentsRouter } from "./comments.js";
 import { parseTicketListQuery } from "../lib/ticketQuery.js";
+import { internalNotesRouter } from "./internalNotes.js";
 
 export const ticketsRouter = Router();
 
@@ -12,6 +13,7 @@ export const ticketsRouter = Router();
 // changed their initial password. Ownership always comes from req.user, never
 // from anything the client sends (header, body, or query string).
 ticketsRouter.use(requireAuth, requirePasswordChanged);
+ticketsRouter.use("/:id/internal-notes", internalNotesRouter);
 
 // BR-01: ticketNumber = TKT-{creation year}-{6-digit zero-padded, based on id}.
 function generateTicketNumber(id: number, createdAt: Date): string {

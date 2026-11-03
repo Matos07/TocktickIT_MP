@@ -140,3 +140,84 @@ describe("PATCH /api/tickets/:id/resolved-by-requester", () => {
         expect(res.status).toBe(403);
     });
 });
+
+describe("Internal Notes", () => {
+    const notes = (ticketId: number) => `/api/tickets/${ticketId}/internal-notes`;
+
+    it("AC-16: IT Staff and Administrator can post and read notes, oldest first", async () => {
+        const ticketId = await createTicket(owner);
+
+        const first = await staff.agent.post(notes(ticketId)).send({ content: "  Checked the battery report.  " });
+        await admin.agent.post(notes(ticketId)).send({ content: "Ordering a replacement part." });
+
+        expect(first.status).toBe(201);
+        expect(first.body).toMatchObject({
+            content: "Checked the battery report.",
+            authorId: staff.user.id,
+            authorRole: "IT_STAFF",
+        });
+
+        for (const viewer of [staff, admin]) {
+            const res = await viewer.agent.get(notes(ticketId));
+            expect(res.status).toBe(200);
+            expect(res.body.map((n: { content: string }) => n.content)).toEqual([
+                "Checked the battery report.",
+                "Ordering a replacement part.",
+            ]);
+        }
+    });
+
+    it("AC-04 / BR-04: a Requester is refused (403) on read and write, and nothing is persisted", async () => {
+        const ticketId = await createTicket(owner);
+        await staff.agent.post(notes(ticketId)).send({ content: "confidential triage note" });
+
+        const read = await owner.agent.get(notes(ticketId));
+        expect(read.status).toBe(403);
+        expect(JSON.stringify(read.body)).not.toContain("confidential");
+
+        const before = await prisma.internalNote.count({ where: { ticketId } });
+        const write = await owner.agent.post(notes(ticketId)).send({ content: "sneaky note" });
+        expect(write.status).toBe(403);
+        expect(await prisma.internalNote.count({ where: { ticketId } })).toBe(before);
+    });
+
+    it("gives a Requester the same 403 whether or not the ticket exists (no existence leak)", async () => {
+        const ticketId = await createTicket(owner);
+
+        const mine = await owner.agent.get(notes(ticketId));
+        const foreign = await other.agent.get(notes(ticketId));
+        const missing = await owner.agent.get(notes(999999999));
+
+        expect([mine.status, foreign.status, missing.status]).toEqual([403, 403, 403]);
+        expect(foreign.body).toEqual(missing.body);
+    });
+
+    it("never leaks a note into anything a Requester can read, and keeps it out of Public Comments", async () => {
+        const ticketId = await createTicket(owner);
+        await staff.agent.post(notes(ticketId)).send({ content: "secret-internal-marker" });
+
+        const detail = await owner.agent.get(`/api/tickets/${ticketId}`);
+        const comments = await owner.agent.get(`/api/tickets/${ticketId}/comments`);
+        const staffComments = await staff.agent.get(`/api/tickets/${ticketId}/comments`);
+
+        expect(JSON.stringify(detail.body)).not.toContain("secret-internal-marker");
+        expect(JSON.stringify(comments.body)).not.toContain("secret-internal-marker");
+        expect(JSON.stringify(staffComments.body)).not.toContain("secret-internal-marker");
+    });
+
+    it("BR-19: rejects empty, whitespace-only, over-long and non-string content (400)", async () => {
+        const ticketId = await createTicket(owner);
+
+        for (const content of ["", "   \n\t ", "x".repeat(2001), undefined, 42]) {
+            const res = await staff.agent.post(notes(ticketId)).send({ content });
+            expect(res.status).toBe(400);
+            expect(res.body.error.fields).toHaveProperty("content");
+        }
+        expect((await staff.agent.post(notes(ticketId)).send({ content: "x".repeat(2000) })).status).toBe(201);
+    });
+
+    it("returns 404 to IT Staff for a nonexistent ticket", async () => {
+        expect((await staff.agent.get(notes(999999999))).status).toBe(404);
+        expect((await staff.agent.post(notes(999999999)).send({ content: "hello" })).status).toBe(404);
+    });
+});
