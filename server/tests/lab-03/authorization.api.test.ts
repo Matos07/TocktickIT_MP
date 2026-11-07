@@ -49,6 +49,10 @@ describe("AUTH-05: unauthenticated access", () => {
         ["get", "/api/staff/attachments/1/download"],
         ["get", "/api/tickets/1/internal-notes"],
         ["post", "/api/tickets/1/internal-notes"],
+        ["get", "/api/admin/users"],
+        ["post", "/api/admin/users"],
+        ["patch", "/api/admin/users/1"],
+        ["patch", "/api/admin/users/1/reset-password"],
     ])("%s %s returns 401 without a session", async (method, path) => {
         const res = await (request(app) as any)[method](path);
         expect(res.status).toBe(401);

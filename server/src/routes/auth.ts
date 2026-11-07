@@ -25,7 +25,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 
     try {
         const prisma = getPrisma();
-        const user = await prisma.user.findUnique({ where: { email } });
+        // BR-22: emails are stored trimmed and lowercase, so the login lookup ignores case too.
+        const user = await prisma.user.findUnique({ where: { email: email.trim().toLowerCase() } });
 
         // BR-06: identical message whether the email exists or the password is wrong.
         if (!user || !(await verifyPassword(password, user.passwordHash))) {

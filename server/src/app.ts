@@ -7,6 +7,7 @@ import { relatedSystemsRouter } from "./routes/related-systems.js";
 import { attachmentsRouter } from "./routes/attachments.js";
 import { authRouter } from "./routes/auth.js";
 import { staffRouter } from "./routes/staff.js";
+import { adminRouter } from "./routes/admin.js";
 
 // The Express app is exported separately from app.listen() (see index.ts) so
 // Supertest can import `app` without opening a port. Do not merge these files.
@@ -20,6 +21,7 @@ app.use("/api/staff", staffRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/tickets", ticketsRouter);
 app.use("/api/attachments", attachmentsRouter);
+app.use("/api/admin", adminRouter);
 
 // Reference data stays public: it is not sensitive and Lab 1 tests rely on it.
 app.use("/api/related-systems", relatedSystemsRouter);
