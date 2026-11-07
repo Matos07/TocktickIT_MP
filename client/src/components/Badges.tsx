@@ -52,3 +52,6 @@ export function RoleBadge({ value }: { value: string }) {
         </span>
     );
 }
+export function ActiveBadge({ active }: { active: boolean }) {
+    return <span style={{ ...base, ...(active ? PALE_GREEN : RED) }}>{active ? "Active" : "Inactive"}</span>;
+}
