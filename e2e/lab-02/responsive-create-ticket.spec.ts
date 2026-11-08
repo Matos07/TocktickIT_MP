@@ -1,4 +1,6 @@
 import { test, expect, devices } from "@playwright/test";
+import { accounts } from "../support/accounts.js";
+import { loginAs } from "../support/auth.js";
 
 const VIEWPORTS = {
     desktop: { width: 1280, height: 900 },
@@ -6,11 +8,7 @@ const VIEWPORTS = {
     mobile: devices["iPhone 13"].viewport,
 };
 
-async function loginAsJennifer(page: import("@playwright/test").Page) {
-    await page.goto("/select-requester");
-    await page.getByLabel(/development requester/i).selectOption({ label: "Jennifer Anderson" });
-    await page.getByRole("button", { name: /continue/i }).click();
-}
+const loginAsJennifer = (page: import("@playwright/test").Page) => loginAs(page, accounts.requester.email);
 
 for (const [name, viewport] of Object.entries(VIEWPORTS)) {
     test(`Create Ticket — ${name} screenshot`, async ({ page }) => {
