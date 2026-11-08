@@ -11,7 +11,8 @@
     "prisma:seed": "tsx prisma/seed.ts",
     "test": "vitest run",
     "prisma:e2e-users": "tsx prisma/e2e-users.ts",
-    "e2e:admins": "tsx prisma/e2e-admins.ts"
+    "e2e:admins": "tsx prisma/e2e-admins.ts",
+    "db:cleanup-test-users": "tsx prisma/cleanup-test-users.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
