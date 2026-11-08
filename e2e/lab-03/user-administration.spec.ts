@@ -19,7 +19,10 @@ test.describe.serial("User administration (E2E-04)", () => {
     test("creates a user with validation, finds it, edits it, and rejects a duplicate email", async ({ browser }) => {
         const admin = await newSession(browser, accounts.admin.email);
         await expect(admin.getByRole("heading", { name: "User Management" })).toBeVisible();
+<<<<<<< HEAD
         await admin.getByLabel("Search").fill("E2E");
+=======
+>>>>>>> e49ac83a3b9e899be0d810536990dcaaafe15e24
 
         await admin.getByRole("button", { name: "Create User" }).click();
         await admin.getByRole("button", { name: "Save User" }).click();

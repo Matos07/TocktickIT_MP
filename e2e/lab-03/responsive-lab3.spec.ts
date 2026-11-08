@@ -64,8 +64,11 @@ for (const [name, viewport] of Object.entries(VIEWPORTS)) {
         test("User Management", async ({ page }) => {
             await loginAs(page, accounts.admin.email);
             await expect(page.getByRole("heading", { name: "User Management" })).toBeVisible();
+<<<<<<< HEAD
             await page.getByLabel("Search").fill("E2E"); // the dev database holds hundreds of throwaway accounts
             await expect(page.getByText(accounts.admin.email)).toBeVisible();
+=======
+>>>>>>> e49ac83a3b9e899be0d810536990dcaaafe15e24
             await page.getByRole("button", { name: "Create User" }).click();
             await expect(page.getByRole("heading", { name: "Create New User" })).toBeVisible();
             await shot(page, `user-management/${name}`);
