@@ -2,8 +2,11 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
     testDir: "./e2e",
-    fullyParallel: false, // tests share the real dev database — avoid races
+    globalSetup: "./e2e/support/global-setup.ts",
+    fullyParallel: false, // every scenario shares the real dev database
+    workers: 1,
     retries: 0,
+    timeout: 60_000,
     reporter: "list",
     use: {
         baseURL: "http://localhost:5173",
@@ -25,7 +28,5 @@ export default defineConfig({
             timeout: 30_000,
         },
     ],
-    projects: [
-        { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    ],
+    projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });
