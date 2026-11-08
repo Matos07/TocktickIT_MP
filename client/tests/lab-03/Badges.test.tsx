@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { PriorityBadge, RoleBadge, StatusBadge } from "../../src/components/Badges.js";
+import { ActiveBadge, PriorityBadge, RoleBadge, StatusBadge } from "../../src/components/Badges.js";
 
 describe("StatusBadge (STYLE-01)", () => {
     it.each([
@@ -42,5 +43,15 @@ describe("RoleBadge (STYLE-01)", () => {
     ])("%s renders the label %s", (value, label) => {
         render(<RoleBadge value={value} />);
         expect(screen.getByText(label)).toBeInTheDocument();
+    });
+});
+
+describe("ActiveBadge (STYLE-01)", () => {
+    it.each([
+        [true, "Active", "#EAF6EF"],
+        [false, "Inactive", "#FBE7E4"],
+    ])("%s renders the label %s on %s", (active, label, background) => {
+        render(<ActiveBadge active={active} />);
+        expect(screen.getByText(label)).toHaveStyle(`background-color: ${background}`);
     });
 });

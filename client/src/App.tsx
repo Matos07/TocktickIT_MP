@@ -3,6 +3,8 @@ import CreateTicket from "./pages/CreateTicket.js";
 import MyTickets from "./pages/MyTickets.js";
 import TicketDetail from "./pages/TicketDetail.js";
 import StaffTicketQueue from "./pages/StaffTicketQueue.js";
+import StaffTicketDetail from "./pages/StaffTicketDetail.js";
+import UserManagement from "./pages/UserManagement.js";
 import Login from "./pages/Login.js";
 import ChangePassword from "./pages/ChangePassword.js";
 import { RequireAuth } from "./routes/RequireAuth.js";
@@ -10,15 +12,14 @@ import { RequireRole } from "./routes/RequireRole.js";
 import { RoleBadge } from "./components/Badges.js";
 import { useAuth } from "./context/AuthContext.js";
 import { logout } from "./api/auth.js";
-import StaffTicketDetail from "./pages/StaffTicketDetail.js";
 
-// "/" is the role-aware home: Requesters see My Tickets, IT Staff and Administrators the queue.
+// "/" is the role-aware home: Requesters see My Tickets, IT Staff the queue,
+// and Administrators their own job, User Management.
 function Home() {
   const { user } = useAuth();
-  return user?.role === "REQUESTER" ? <MyTickets /> : <Navigate to="/queue" replace />;
+  if (user?.role === "REQUESTER") return <MyTickets />;
+  return <Navigate to={user?.role === "ADMINISTRATOR" ? "/admin/users" : "/queue"} replace />;
 }
-
-
 
 function AppShell() {
   const { user, setUser } = useAuth();
@@ -55,6 +56,11 @@ function AppShell() {
               <Link className="nav-link text-white" to="/queue">
                 Ticket Queue
               </Link>
+              {user.role === "ADMINISTRATOR" && (
+                <Link className="nav-link text-white" to="/admin/users">
+                  Users
+                </Link>
+              )}
             </div>
           )}
           {user && (
@@ -79,6 +85,9 @@ function AppShell() {
           <Route element={<RequireRole roles={["IT_STAFF", "ADMINISTRATOR"]} />}>
             <Route path="/queue" element={<StaffTicketQueue />} />
             <Route path="/staff/tickets/:id" element={<StaffTicketDetail />} />
+          </Route>
+          <Route element={<RequireRole roles={["ADMINISTRATOR"]} />}>
+            <Route path="/admin/users" element={<UserManagement />} />
           </Route>
         </Routes>
       </div>
