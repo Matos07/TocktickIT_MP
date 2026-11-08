@@ -17,3 +17,5 @@ uploads/
 
 test-results/
 *.spec.ts-snapshots/
+
+server/prisma/.e2e-admins.json
